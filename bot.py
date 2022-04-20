@@ -293,13 +293,10 @@ def ending02_pattern(message):
         bot.send_message(message.chat.id, texts.error[lang])
 
 
-
-
-
 def end_last_pattern(message):
     print('finish')
     user = user_dict[message.chat.id]
-    doc_path = f'data/{user.ending}{user.intramural}{user.long}.docx'
+    doc_path = f'data/{user.ending}{user.intramural}{user.long}.pdf'
     print(doc_path)
     if os.path.isfile(doc_path):
         bot.send_message(message.chat.id, texts.result[lang])
@@ -310,7 +307,7 @@ def end_last_pattern(message):
                                           f'Int:{user.intramural}\nLong:{user.long}')
     bot.send_message(message.chat.id, texts.restart[lang])
     bot.register_next_step_handler(message, process_restart_step)
-
+    
 
 # Enable saving next step handlers to file "./.handlers-saves/step.save".
 # Delay=2 means that after any change in next step handlers (e.g. calling register_next_step_handler())
