@@ -1,2 +1,2 @@
-# OgrRetro_tb_bot
+# OgrRetro_tg_bot
 Телеграм бот "Организуй ретроспективу"
