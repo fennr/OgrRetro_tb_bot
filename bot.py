@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from enum import IntEnum
 from typing import Callable
 import os
-# TOKEN = "5350119868:AAHVstcEu10mqfC_iCXSa5VnCjpbiY8Eluw"
 
 TOKEN = os.environ.get('TOKEN')
 
@@ -126,24 +125,6 @@ def step_pattern(message, this_process: Callable, yes_process: Callable, yes_tex
             msg = bot.send_message(message.chat.id, texts.no_ans[lang])
             bot.register_next_step_handler(msg, this_process)
     except Exception as e:
-        bot.send_message(message.chat.id, texts.error[lang])
-
-
-def end_pattern(message, answer, field, text, next_process: Callable):
-    print(answer)
-    print(field)
-    try:
-        if answer in Answers.yes:
-            field = True
-            print(field)
-        elif answer in Answers.no:
-            field = False
-        else:
-            raise Exception("Выберите Да или Нет")
-        print(user)
-        msg = bot.send_message(message.chat.id, text)
-        bot.register_next_step_handler(msg, next_process)
-    except Exception:
         bot.send_message(message.chat.id, texts.error[lang])
 
 
