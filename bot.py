@@ -109,19 +109,15 @@ texts = Messages(
 def step_pattern(message, this_process: Callable, yes_process: Callable, yes_text, no_process: Callable, no_text):
     try:
         ans = message.text
-        print(ans)
         if ans in answer.yes:
-            print("попали в да")
             print(yes_process)
             msg = bot.send_message(message.chat.id, yes_text)
             bot.register_next_step_handler(msg, yes_process)
         elif ans in answer.no:
-            print('попали в нет')
             print(no_process)
             msg = bot.send_message(message.chat.id, no_text)
             bot.register_next_step_handler(msg, no_process)
         else:
-            print('попали в ошибку')
             msg = bot.send_message(message.chat.id, texts.no_ans[lang])
             bot.register_next_step_handler(msg, this_process)
     except Exception as e:
@@ -200,6 +196,7 @@ def process_04_step(message):
 
 
 def process_05_step(message):
+    print('05')
     step_pattern(message=message,
                  this_process=process_05_step,
                  yes_process=process_end04_step,
@@ -210,6 +207,7 @@ def process_05_step(message):
 
 
 def process_06_step(message):
+    print('06')
     step_pattern(message=message,
                  this_process=process_06_step,
                  yes_process=process_07_step,
@@ -220,6 +218,7 @@ def process_06_step(message):
 
 
 def process_07_step(message):
+    print('07')
     step_pattern(message=message,
                  this_process=process_07_step,
                  yes_process=process_end04_step,
@@ -230,6 +229,7 @@ def process_07_step(message):
 
 
 def process_08_step(message):
+    print('08')
     step_pattern(message=message,
                  this_process=process_03_step,
                  yes_process=process_end04_step,
@@ -260,6 +260,7 @@ def process_end05_step(message):
 
 
 def ending01(message, endng):
+    print('end01')
     user = User(endng)
     user_dict[message.chat.id] = user
     intramural = message.text
@@ -277,6 +278,7 @@ def ending01(message, endng):
 
 
 def ending02_pattern(message):
+    print('end02')
     long = message.text
     user = user_dict[message.chat.id]
     try:
@@ -295,6 +297,7 @@ def ending02_pattern(message):
 
 
 def end_last_pattern(message):
+    print('finish')
     user = user_dict[message.chat.id]
     doc_path = f'data/{user.ending}{user.intramural}{user.long}.docx'
     print(doc_path)
