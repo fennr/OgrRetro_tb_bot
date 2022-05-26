@@ -48,6 +48,7 @@ class Messages:
     start: dict
     q_01: dict
     q_02: dict
+    q_021: dict
     q_03: dict
     q_04: dict
     q_05: dict
@@ -70,7 +71,9 @@ class Messages:
 
 
 texts = Messages(
-    start={'ru': 'Вас привествует бот "Организуй Ретроспективу".'},
+    start={'ru': '''Вас приветствует бот для организации ретроспективы. 
+Этот бот поможет Вам подобрать упражнения для каждого из пяти этапов ретроспективы в зависимости от Ваших целей и приоритетов. 
+Отвечайте «да» если считаете, что описанная в вопросе цель действительно является главной целью планируемой ретроспективной встречи.'''},
     q_01={
         'ru': '''Являются ли какие-либо из перечисленных ниже целей приоритетными целями ретроспективы?\n
 * Определить настрой команды и эмоциональное состояние в целом\n
@@ -78,7 +81,11 @@ texts = Messages(
 * Определить удовлетворенность команды ходом и итогами спринта\n
 * Собрать обратную связь о работе менеджера проекта
     '''},
-    q_02={'ru': 'Ставите ли Вы перед собой какие-либо другие цели?'},
+    q_02={'ru': '''Есть ли у Вас какие-либо ещё цели на ретроспективу из перечисленных ниже?\n
+* Сгенерировать рекомендации по улучшению результативности команды\n
+* Выявить корень проблемы и разработать рекомендации по улучшению работы\n
+* Провести самоанализ участников для выявления их сильных и слабых сторон, ожиданий'''},
+    q_021={'ru': 'Есть ли среди их этих целей более значимые цели, чем перечисленные в первом вопросе?'},
     q_03={'ru': 'Ставите ли Вы перед собой как приоритет на планируемую ретроспективу '
                 'цель сгенерировать рекомендации по улучшению результативности команды?'},
     q_04={'ru': 'Является ли для Вас приоритетным проведение тимбилдинга '
@@ -95,11 +102,10 @@ texts = Messages(
     end_04={'ru': 'Для формирования общей картины'},
     end_05={'ru': 'На основе вопросов'},
     ending_01={'ru': 'Будет ли ретроспектива проводиться очно?'},
-    ending_02={'ru': 'Имеете ли Вы возможность проводить на каждом этапе ретроспективы упражнения '
-                     'длительностью более 20 минут?'},
-    error={'ru': 'Произошла ошибка'},
-    restart={'ru': 'Хотите подобрать ретроспективу еще раз?'},
-    result={'ru': 'Для вас подобраны следующие упражнения'},
+    ending_02={'ru': 'Имеете ли Вы возможность запланировать на проведение ретроспективы более часа?'},
+    error={'ru': 'Выберите Да или Нет'},
+    restart={'ru': 'Хотите подобрать ретроспективу ещё раз?'},
+    result={'ru': 'Для Вас подобраны следующие упражнения:'},
     end={'ru': 'Завершение работы'},
     bye={'ru': 'Хорошего дня!'},
     no_ans={'ru': 'Пожалуйста, выберите ответ с помощью клавиатуры или напишите "Да"/"Нет"'}
@@ -121,7 +127,7 @@ def step_pattern(message, this_process: Callable, yes_process: Callable, yes_tex
             msg = bot.send_message(message.chat.id, texts.no_ans[lang])
             bot.register_next_step_handler(msg, this_process)
     except Exception as e:
-        bot.send_message(message.chat.id, texts.error[lang])
+        msg = bot.send_message(message.chat.id, texts.error[lang])
 
 
 # Handle '/start' and '/help'
@@ -142,13 +148,19 @@ def process_no_step(message):
 
 def process_restart_step(message):
     print('restart')
-    step_pattern(message=message,
-                 this_process=process_restart_step,
-                 yes_process=process_01_step,
-                 yes_text=texts.q_01[lang],
-                 no_process=process_no_step,
-                 no_text=texts.end[lang]
-                 )
+    try:
+        ans = message.text
+        if ans in answer.yes:
+            msg = bot.send_message(message.chat.id, texts.q_01[lang])
+            bot.register_next_step_handler(msg, process_01_step)
+        elif ans in answer.no:
+            hideBoard = types.ReplyKeyboardRemove()
+            msg = bot.send_message(message.chat.id, texts.end[lang], reply_markup=hideBoard)
+        else:
+            msg = bot.send_message(message.chat.id, texts.no_ans[lang])
+            bot.register_next_step_handler(msg, process_restart_step)
+    except Exception as e:
+        bot.send_message(message.chat.id, texts.error[lang])
 
 
 def process_01_step(message):
@@ -166,9 +178,20 @@ def process_02_step(message):
     print('02')
     step_pattern(message=message,
                  this_process=process_02_step,
-                 yes_process=process_end04_step,
-                 yes_text=texts.ending_01[lang],
+                 yes_process=process_021_step,
+                 yes_text=texts.q_021[lang],
                  no_process=process_end01_step,
+                 no_text=texts.ending_01[lang]
+                 )
+
+
+def process_021_step(message):
+    print('02.1')
+    step_pattern(message=message,
+                 this_process=process_021_step,
+                 yes_process=process_03_step,
+                 yes_text=texts.q_03[lang],
+                 no_process=process_end04_step,
                  no_text=texts.ending_01[lang]
                  )
 
@@ -274,7 +297,8 @@ def ending01(message, endng):
         msg = bot.send_message(message.chat.id, texts.ending_02[lang])
         bot.register_next_step_handler(msg, ending02_pattern)
     except Exception:
-        bot.send_message(message.chat.id, texts.error[lang])
+        msg = bot.send_message(message.chat.id, texts.error[lang])
+        bot.register_next_step_handler(msg, ending01)
 
 
 def ending02_pattern(message):
@@ -290,7 +314,8 @@ def ending02_pattern(message):
             raise Exception("Выберите Да или Нет")
         end_last_pattern(message)
     except Exception:
-        bot.send_message(message.chat.id, texts.error[lang])
+        msg = bot.send_message(message.chat.id, texts.error[lang])
+        bot.register_next_step_handler(msg, ending02_pattern)
 
 
 def end_last_pattern(message):
@@ -301,13 +326,13 @@ def end_last_pattern(message):
     if os.path.isfile(doc_path):
         bot.send_message(message.chat.id, texts.result[lang])
         with open(doc_path, 'rb') as document:
-            bot.send_document(chat_id=message.chat.id, document=document, visible_file_name="Упражнения.docx")
+            bot.send_document(chat_id=message.chat.id, document=document, visible_file_name="Упражнения.pdf")
     else:
         bot.send_message(message.chat.id, f'id: {message.chat.id}\nEnding: {user.ending}\n'
                                           f'Int:{user.intramural}\nLong:{user.long}')
     bot.send_message(message.chat.id, texts.restart[lang])
     bot.register_next_step_handler(message, process_restart_step)
-    
+
 
 # Enable saving next step handlers to file "./.handlers-saves/step.save".
 # Delay=2 means that after any change in next step handlers (e.g. calling register_next_step_handler())
